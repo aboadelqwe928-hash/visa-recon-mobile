@@ -1,0 +1,44 @@
+name: visa_recon_mobile
+description: تطبيق مطابقة الفيزا للموبايل مع دعم أوفلاين
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.5.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # Networking
+  dio: ^5.7.0
+  connectivity_plus: ^6.1.0
+
+  # Storage
+  flutter_secure_storage: ^9.2.2
+  shared_preferences: ^2.3.3
+  path_provider: ^2.1.5
+  sqflite: ^2.4.1
+  path: ^1.9.0
+
+  # State
+  provider: ^6.1.2
+
+  # UI & Utils
+  intl: ^0.19.0
+  google_fonts: ^6.2.1
+  fl_chart: ^0.69.2
+  flutter_spinkit: ^5.2.1
+  pull_to_refresh: ^2.0.0
+
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
