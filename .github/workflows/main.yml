@@ -1,8 +1,9 @@
-
 name: Build Flutter APK
 
 on:
   workflow_dispatch:
+  push:
+    branches: [ main ]
 
 jobs:
   build:
@@ -18,17 +19,15 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Setup Flutter
+      - name: Setup Flutter 3.24.5
         uses: subosito/flutter-action@v2
         with:
+          flutter-version: '3.24.5'
           channel: stable
           cache: true
 
-      - name: Configure Flutter Java
-        run: flutter config --jdk-dir="$JAVA_HOME"
-
-      - name: Check Java
-        run: java -version
+      - name: Flutter version
+        run: flutter --version
 
       - name: Get Dependencies
         run: flutter pub get
@@ -41,3 +40,4 @@ jobs:
         with:
           name: visa-recon-apk
           path: build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 30
