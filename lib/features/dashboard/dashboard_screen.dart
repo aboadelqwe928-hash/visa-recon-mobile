@@ -19,6 +19,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String? _error;
   late DateTime _from;
   late DateTime _to;
+  List<Map<String, dynamic>> _dailyPoints = [];
+
+  double _toD(dynamic v) => v is num ? v.toDouble() : double.tryParse('$v') ?? 0.0;
+
+  /// نقط الرسم اليومي من بيانات لوحة التحكم المحفوظة (series: [{day, diff}])
+  Future<List<Map<String, dynamic>>> _buildDailyPoints(SyncService sync, String from, String to) async {
+    final d = await sync.getCached('dashboard', from: from, to: to);
+    final s = d is Map ? d['series'] : null;
+    if (s is! List) return <Map<String, dynamic>>[];
+    return s
+        .whereType<Map>()
+        .map((e) => <String, dynamic>{'day': e['day'], 'diff': e['diff']})
+        .toList();
+  }
 
   @override
   void initState() {
