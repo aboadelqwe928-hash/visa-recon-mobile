@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/db/local_db.dart';
 import '../../core/services/auth_service.dart';
-import '../../core/services/sync_service.dart';
 import '../../core/theme/app_theme.dart';
+import '../lock/lock_settings_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -38,7 +38,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthService>();
-    final sync = context.watch<SyncService>();
     final user = auth.user;
 
     return Scaffold(
@@ -95,6 +94,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
 
+          const SizedBox(height: 12),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.lock_outline, color: AppColors.primary),
+              title: const Text('قفل التطبيق (رقم سري / بصمة)'),
+              trailing: const Icon(Icons.chevron_left),
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const LockSettingsScreen())),
+            ),
+          ),
+
           const SizedBox(height: 20),
           const Text('السيرفر', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
           const SizedBox(height: 8),
@@ -137,65 +146,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ],
               ),
-            ),
-          ),
-
-          const SizedBox(height: 20),
-          const Text('المزامنة', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
-          const SizedBox(height: 8),
-          Card(
-            child: Column(
-              children: [
-                ListTile(
-                  leading: Icon(
-                    sync.status == SyncStatus.offline ? Icons.cloud_off : Icons.cloud_done,
-                    color: AppColors.primary,
-                  ),
-                  title: const Text('آخر مزامنة ناجحة'),
-                  subtitle: Text(_lastSync == null
-                      ? 'لم تتم بعد'
-                      : '${_lastSync!.year}/${_lastSync!.month.toString().padLeft(2, '0')}/${_lastSync!.day.toString().padLeft(2, '0')}  ${_lastSync!.hour.toString().padLeft(2, '0')}:${_lastSync!.minute.toString().padLeft(2, '0')}'),
-                  trailing: sync.isSyncing
-                      ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2))
-                      : IconButton(
-                          icon: const Icon(Icons.sync),
-                          onPressed: () async {
-                            await sync.forceSync();
-                            await _loadMeta();
-                          },
-                        ),
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.delete_outline, color: AppColors.danger),
-                  title: const Text('مسح البيانات المحفوظة'),
-                  onTap: () async {
-                    final ok = await showDialog<bool>(
-                      context: context,
-                      builder: (ctx) => AlertDialog(
-                        title: const Text('تأكيد'),
-                        content: const Text('هتتمسح كل التقارير المحفوظة على الموبايل. هتحتاج مزامنة تاني.'),
-                        actions: [
-                          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('إلغاء')),
-                          TextButton(
-                            onPressed: () => Navigator.pop(ctx, true),
-                            child: const Text('مسح', style: TextStyle(color: AppColors.danger)),
-                          ),
-                        ],
-                      ),
-                    );
-                    if (ok == true) {
-                      await LocalDb.clearCache();
-                      await _loadMeta();
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('اتمسحت البيانات المحلية')),
-                        );
-                      }
-                    }
-                  },
-                ),
-              ],
             ),
           ),
 

@@ -5,10 +5,13 @@ import 'package:provider/provider.dart';
 
 import 'core/api/api_client.dart';
 import 'core/services/auth_service.dart';
+import 'core/services/lock_service.dart';
+import 'core/services/offline_service.dart';
 import 'core/services/sync_service.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/login_screen.dart';
 import 'features/home/home_shell.dart';
+import 'features/lock/lock_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,8 +24,14 @@ void main() async {
   final auth = AuthService(api);
   await auth.init();
 
+  // الكاش القديم (ملخص سريع) اتشال: النسخة الكاملة بقت في OfflineService
   final sync = SyncService(api, auth);
-  await sync.init();
+
+  final offline = OfflineService(api, auth);
+  await offline.init();
+
+  final lock = LockService();
+  await lock.init();
 
   runApp(
     MultiProvider(
@@ -30,6 +39,8 @@ void main() async {
         Provider.value(value: api),
         ChangeNotifierProvider.value(value: auth),
         ChangeNotifierProvider.value(value: sync),
+        ChangeNotifierProvider.value(value: lock),
+        ChangeNotifierProvider.value(value: offline),
       ],
       child: const VisaReconApp(),
     ),
@@ -42,7 +53,7 @@ class VisaReconApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'مطابقة الفيزا',
+      title: 'رقابة الفيزا والكاش',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       locale: const Locale('ar'),
@@ -58,15 +69,21 @@ class VisaReconApp extends StatelessWidget {
           child: child!,
         );
       },
-      home: Consumer<AuthService>(
-        builder: (context, auth, _) {
+      home: Consumer2<AuthService, LockService>(
+        builder: (context, auth, lock, _) {
           if (auth.loading) {
             return const Scaffold(
               body: Center(child: CircularProgressIndicator()),
             );
           }
           if (auth.isLoggedIn) {
-            return const HomeShell();
+            // شاشة القفل فوق التطبيق (التطبيق يفضل شغال تحتها)
+            return Stack(
+              children: [
+                const HomeShell(),
+                if (lock.locked) const Positioned.fill(child: LockScreen()),
+              ],
+            );
           }
           return const LoginScreen();
         },

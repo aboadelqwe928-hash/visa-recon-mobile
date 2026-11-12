@@ -133,7 +133,17 @@ class SyncService extends ChangeNotifier with WidgetsBindingObserver {
       final general = await api.call('r.general', {'from': pFrom, 'to': pTo});
       await LocalDb.put('general:$pFrom:$pTo', general, from: pFrom, to: pTo);
 
-      // 7. Meta (user + period)
+      // 7. الكاش والإجمالي (برنامج الكمبيوتر 2.1.0 أو أحدث). لو الحساب ملوش صلاحية أو البرنامج قديم بنكمل عادي
+      try {
+        final comb = await api.call('r.combined', {'from': pFrom, 'to': pTo});
+        await LocalDb.put('combined:$pFrom:$pTo', comb, from: pFrom, to: pTo);
+      } catch (_) {}
+      try {
+        final cd = await api.call('r.cashDash', {'from': pFrom, 'to': pTo});
+        await LocalDb.put('cashdash:$pFrom:$pTo', cd, from: pFrom, to: pTo);
+      } catch (_) {}
+
+      // 8. Meta (user + period)
       await LocalDb.setMeta('last_period_from', pFrom);
       await LocalDb.setMeta('last_period_to', pTo);
 

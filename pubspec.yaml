@@ -1,7 +1,7 @@
 name: visa_recon_mobile
 description: تطبيق رقابة الفيزا والكاش للموبايل مع دعم أوفلاين
 publish_to: 'none'
-version: 1.1.0+2
+version: 1.2.0+3
 
 environment:
   sdk: ^3.5.4
@@ -36,6 +36,8 @@ dependencies:
   webview_flutter: 4.9.0
   webview_flutter_android: ">=3.16.0 <4.0.0"
   share_plus: ^7.2.2
+  # قفل التطبيق بالبصمة (MainActivity لازم FlutterFragmentActivity)
+  local_auth: 2.3.0
 
   cupertino_icons: ^1.0.8
 

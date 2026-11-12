@@ -94,10 +94,16 @@ class ApiClient {
     }
   }
 
+  /// فحص سريع (4 ثواني) إن برنامج الكمبيوتر متاح
   Future<bool> ping() async {
+    if (_baseUrl == null) return false;
     try {
-      await call('auth.status');
-      return true;
+      final r = await Dio(BaseOptions(
+        connectTimeout: const Duration(seconds: 4),
+        receiveTimeout: const Duration(seconds: 6),
+        headers: {'Content-Type': 'application/json', 'X-Client': 'visa-recon-app'},
+      )).post('$_baseUrl/api/auth.status', data: {});
+      return r.statusCode == 200;
     } catch (_) {
       return false;
     }

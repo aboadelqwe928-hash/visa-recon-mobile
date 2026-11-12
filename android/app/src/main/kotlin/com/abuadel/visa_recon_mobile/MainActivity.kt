@@ -1,5 +1,6 @@
 package com.abuadel.visa_recon_mobile
 
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 
-class MainActivity: FlutterActivity()
+// FlutterFragmentActivity: لازم عشان البصمة (local_auth)
+class MainActivity: FlutterFragmentActivity()
