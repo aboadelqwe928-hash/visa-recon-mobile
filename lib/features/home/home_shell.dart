@@ -6,6 +6,7 @@ import '../../core/theme/app_theme.dart';
 import '../dashboard/dashboard_screen.dart';
 import '../reports/reports_screen.dart';
 import '../settings/settings_screen.dart';
+import '../system/system_screen.dart';
 
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
@@ -18,6 +19,7 @@ class _HomeShellState extends State<HomeShell> {
   int _index = 0;
 
   final _pages = const [
+    SystemScreen(),
     DashboardScreen(),
     ReportsScreen(),
     SettingsScreen(),
@@ -80,14 +82,19 @@ class _HomeShellState extends State<HomeShell> {
             onDestinationSelected: (i) => setState(() => _index = i),
             destinations: [
               const NavigationDestination(
+                icon: Icon(Icons.apps_outlined),
+                selectedIcon: Icon(Icons.apps),
+                label: 'السيستم',
+              ),
+              const NavigationDestination(
                 icon: Icon(Icons.dashboard_outlined),
                 selectedIcon: Icon(Icons.dashboard),
-                label: 'لوحة التحكم',
+                label: 'ملخص سريع',
               ),
               const NavigationDestination(
                 icon: Icon(Icons.assessment_outlined),
                 selectedIcon: Icon(Icons.assessment),
-                label: 'التقارير',
+                label: 'أوفلاين',
               ),
               NavigationDestination(
                 icon: const Icon(Icons.person_outline),
