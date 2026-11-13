@@ -32,8 +32,27 @@ jobs:
       - name: Get Dependencies
         run: flutter pub get
 
+      # مفتاح التوقيع الثابت من Settings > Secrets and variables > Actions
+      - name: Decode signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > android/app/upload-keystore.jks
+            printf 'storePassword=%s\nkeyPassword=%s\nkeyAlias=%s\nstoreFile=upload-keystore.jks\n' "$KEYSTORE_PASSWORD" "$KEY_PASSWORD" "$KEY_ALIAS" > android/key.properties
+            echo "Signing with the fixed release key"
+          else
+            echo "::warning::No KEYSTORE_BASE64 secret - building with a debug key"
+          fi
+
       - name: Build APK
         run: flutter build apk --release
+
+      - name: Show signing certificate
+        run: keytool -printcert -jarfile build/app/outputs/flutter-apk/app-release.apk | head -12 || true
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
