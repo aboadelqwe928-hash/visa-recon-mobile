@@ -10,6 +10,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../core/api/api_client.dart';
 import '../../core/services/auth_service.dart';
+import '../../core/services/nav_bus.dart';
 import '../../core/services/offline_service.dart';
 
 /// السيستم كله جوه التطبيق.
@@ -34,6 +35,11 @@ class _SystemScreenState extends State<SystemScreen> with AutomaticKeepAliveClie
   int _progress = 0;
   String? _key;
   String? _shownSnap;
+  // فتح شاشة معينة بطلب من الرئيسية (NavBus)
+  NavBus? _bus;
+  int _navTick = 0;
+  bool _loaded = false;
+  bool _pendingNav = false;
 
   @override
   bool get wantKeepAlive => true;
@@ -50,6 +56,8 @@ class _SystemScreenState extends State<SystemScreen> with AutomaticKeepAliveClie
           if (mounted) setState(() => _progress = p);
         },
         onPageFinished: (_) {
+          _loaded = true;
+          if (_pendingNav) _runNav();
           if (_mode == _Mode.online) context.read<OfflineService>().syncIfDue();
         },
         onWebResourceError: (e) {
@@ -62,6 +70,41 @@ class _SystemScreenState extends State<SystemScreen> with AutomaticKeepAliveClie
           return ok ? NavigationDecision.navigate : NavigationDecision.prevent;
         },
       ));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _bus = context.read<NavBus>();
+      _navTick = _bus!.tick;
+      _bus!.addListener(_onNav);
+    });
+  }
+
+  @override
+  void dispose() {
+    _bus?.removeListener(_onNav);
+    super.dispose();
+  }
+
+  void _onNav() {
+    final b = _bus;
+    if (b == null || b.tick == _navTick) return;
+    _navTick = b.tick;
+    _pendingNav = true;
+    if (_loaded && _mode != _Mode.none) _runNav();
+  }
+
+  /// بنستنى لحد ما البرنامج جوه الصفحة يجهز (window.__VR) وبعدين نفتح الشاشة
+  Future<void> _runNav() async {
+    final b = _bus;
+    if (b == null || b.view == null) return;
+    _pendingNav = false;
+    final args = jsonEncode({'v': b.view, 'd': b.day});
+    final js = '(function(a){var n=0;var t=setInterval(function(){var X=window.__VR;'
+        'if(X&&X.S&&X.S.user&&X.go){clearInterval(t);try{'
+        'if(a.d){if(a.v==="cash"){X.S.ui.cashDay=a.d;X.S.ui.ccTab="";}else{X.S.from=a.d;X.S.to=a.d;X.S.cache={};}}'
+        'X.go(a.v);}catch(e){}}else if(++n>60){clearInterval(t);}},150);})($args);';
+    try {
+      await _c.runJavaScript(js);
+    } catch (_) {}
   }
 
   @override
@@ -93,6 +136,7 @@ class _SystemScreenState extends State<SystemScreen> with AutomaticKeepAliveClie
       if (online) {
         _mode = _Mode.online;
         _failed = false;
+        _loaded = false;
         await _c.loadRequest(Uri.parse('$url/?vrt=${Uri.encodeComponent(token)}#dashboard'));
       } else if (await off.hasOffline) {
         await _loadOffline();
@@ -110,6 +154,7 @@ class _SystemScreenState extends State<SystemScreen> with AutomaticKeepAliveClie
     final off = context.read<OfflineService>();
     _mode = _Mode.offline;
     _failed = false;
+    _loaded = false;
     _shownSnap = off.snapAt;
     await _c.loadFile(await off.htmlPath);
     if (mounted) setState(() {});

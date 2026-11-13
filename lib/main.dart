@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 
 import 'core/api/api_client.dart';
 import 'core/services/auth_service.dart';
+import 'core/services/home_service.dart';
 import 'core/services/lock_service.dart';
+import 'core/services/nav_bus.dart';
 import 'core/services/offline_service.dart';
 import 'core/services/sync_service.dart';
 import 'core/theme/app_theme.dart';
@@ -15,6 +18,10 @@ import 'features/lock/lock_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // أسماء الأيام والشهور بالعربي (الرئيسية)
+  try {
+    await initializeDateFormatting('ar');
+  } catch (_) {}
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.light,
@@ -33,6 +40,11 @@ void main() async {
   final lock = LockService();
   await lock.init();
 
+  // 1.3.0: الشاشة الرئيسية + فتح شاشات السيستم منها
+  final home = HomeService(api, auth);
+  await home.init();
+  final nav = NavBus();
+
   runApp(
     MultiProvider(
       providers: [
@@ -41,6 +53,8 @@ void main() async {
         ChangeNotifierProvider.value(value: sync),
         ChangeNotifierProvider.value(value: lock),
         ChangeNotifierProvider.value(value: offline),
+        ChangeNotifierProvider.value(value: home),
+        ChangeNotifierProvider.value(value: nav),
       ],
       child: const VisaReconApp(),
     ),
